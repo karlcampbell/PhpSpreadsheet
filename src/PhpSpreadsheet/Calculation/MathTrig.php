@@ -1081,6 +1081,21 @@ class MathTrig
         );
     }
 
+    protected static function filterFormulaArgs($cellReference, $args)
+    {
+        return array_filter(
+            $args,
+            function ($index) use ($cellReference) {
+                list(, $row, $column) = explode('.', $index);
+
+                //take this cell out if it contains the SUBTOTAL formula
+                return strpos(strtoupper($cellReference->getWorksheet()->getCell($column . $row)->getValue()), '=SUBTOTAL(') === false;
+
+            },
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
     /**
      * SUBTOTAL.
      *
@@ -1123,6 +1138,8 @@ class MathTrig
                 case 8:
                     return Statistical::STDEVP($aArgs);
                 case 9:
+                    //remove cells that contain the SUBTOTAL formula that we're going to pass to SUM
+                    $aArgs = self::filterFormulaArgs($cellReference, $aArgs);
                     return self::SUM($aArgs);
                 case 10:
                     return Statistical::VARFunc($aArgs);
